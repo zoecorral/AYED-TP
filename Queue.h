@@ -15,7 +15,11 @@ private:
 
 public:
     Queue () : frente(nullptr), final(nullptr) {}
-    ~Queue () {}
+    ~Queue () {
+        while (!isEmpty) {
+            dequeue();
+        }
+    }
 
 
     void enqueue (Envio* e) {
