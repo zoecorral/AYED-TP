@@ -129,6 +129,8 @@ public:
         return masPesadoDeZonaRec(comienzo, zona);
     }
 
+    NodoPendiente* getComienzo() {return comienzo}
+
 private:
     // Caso base: lista vacia -> resumen neutro. Caso recursivo: primero se
     // resuelve el resto de la lista y despues se procesa el nodo actual,
