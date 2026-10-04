@@ -48,4 +48,19 @@ public:
     bool isEmpty () {
         return tope == nullptr;
     }
+
+    void mostrarStack() const {
+        if (isEmpty()) {
+            return;
+        }
+
+        NodoStack* aux = tope;
+        
+        std::cout << "TOP\n | \n";
+        
+        while (aux != nullptr) {
+            std::cout << aux->envio->getCodigo() << "\n";
+            aux = aux->siguiente;
+        }
+    }
 };
