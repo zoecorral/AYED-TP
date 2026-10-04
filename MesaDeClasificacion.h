@@ -133,5 +133,41 @@ public:
         std::cout << "Ultimo envio procesado: "  << pilaProcesados.top()->getCodigo() << "\n";
     }
 
+    void busquedaBinaria (std::string cod) {
+        if (tamaño == 0) {
+            return;
+        }
+
+        if (criterioActual != criterio::CODIGO) {
+            ordenarLote(criterio::CODIGO);
+        }
+
+        int izq = 0;
+        int der = tamaño - 1;
+
+        std::cout << "Buscar: " << cod << "\n\n";
+
+        while (izq <= der) {
+            int mid = izq + (der - izq) / 2;
+
+            std::cout << "izq = " << izq << std::endl;
+            std::cout << "der = " << der << std::endl;
+            std::cout << "mid: " << mid << "\n" << std::endl;
+
+            if (lote[mid]->getCodigo() == cod) {
+                std::cout << "Resultado:\n";
+                std::cout << lote[mid]->getCodigo() << " encontrado\n";
+                return;
+            }
+
+            if (lote[mid]->getCodigo()  < cod) {
+                izq = mid + 1;
+            } else {
+                der = mid - 1;
+            }
+        }
+        
+        std::cout << "El envio " << cod << " no fue encontrado.\n";
+    }
     
 };
