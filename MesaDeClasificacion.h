@@ -109,5 +109,29 @@ public:
         colaPreparacion.mostrarQueue();
     }
 
+    void procesarStack(Queue& colaPreparacion, Stack& pilaProcesados) {
+        if (colaPreparacion.isEmpty()) {
+            return;
+        }
+
+        std::cout << "Procesados en este orden: \n\n";
+
+        while (!colaPreparacion.isEmpty()) {
+            Envio* e  = colaPreparacion.dequeue();
+            pilaProcesados.push(e);
+            std::cout << e->getCodigo() << std::endl;
+        }
+
+        pilaProcesados.mostrarStack();
+    }
+
+    void consultarUltimoProcesado(Stack& pilaProcesados) const {
+        if (pilaProcesados.isEmpty()) {
+            return;
+        }
+
+        std::cout << "Ultimo envio procesado: "  << pilaProcesados.top()->getCodigo() << "\n";
+    }
+
     
 };
