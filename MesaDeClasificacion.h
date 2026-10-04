@@ -95,4 +95,19 @@ public:
 
         criterioActual = criterio;
     }
+
+    void cargarQueue(Queue& colaPreparacion) {
+        if (tamaño = 0) {
+            return;
+        }
+
+        for (int i = 0; i < tamaño; i++) {
+            colaPreparacion.enqueue(lote[i]);
+        }
+
+        std::cout << "Queue: \n" << std::endl;
+        colaPreparacion.mostrarQueue();
+    }
+
+    
 };
