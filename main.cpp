@@ -14,7 +14,8 @@ void mostrarMenu() {
     std::cout << "7. Mostrar historial\n";
     std::cout << "8. Resumen recursivo por zona\n";
     std::cout << "9. Envio mas pesado por zona (desafio)\n";
-    std::cout << "10. Finalizar\n";
+    std::cout << "10. Consultar indice BST por codigo\n";
+    std::cout << "11. Finalizar\n";
     std::cout << "Opcion: ";
 }
 
@@ -112,13 +113,21 @@ int main() {
             cd.envioMasPesadoDeZona(zona);
 
         } else if (opcion == 10) {
+            std::string cod;
+            std::cout << "Codigo: "; std::getline(std::cin, cod);
+            cd.buscarEnBST(cod);
+            std::cout << "--- Recorrido in-order ---\n";
+            cd.inOrderBST();
+            cd.alturaBST();
+
+        } else if (opcion == 11) {
             std::cout << "Finalizando... liberando memoria.\n";
 
         } else {
             std::cout << "Opcion invalida.\n";
         }
 
-    } while (opcion != 10);
+    } while (opcion != 11);
 
     return 0;
     // Al salir de main, ~CentroDeDistribucion() libera todo en cascada:
