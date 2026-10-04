@@ -16,7 +16,7 @@ private:
 public:
     Queue () : frente(nullptr), final(nullptr) {}
     ~Queue () {
-        while (!isEmpty) {
+        while (!isEmpty()) {
             dequeue();
         }
     }
@@ -56,7 +56,7 @@ public:
         return frente->envio;
     }
 
-    bool isEmpty const() {
+    bool isEmpty() const {
         return frente == nullptr;
     }
 };
