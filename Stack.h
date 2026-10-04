@@ -14,7 +14,7 @@ private:
 public:
     Stack () : tope(nullptr) {}
     ~Stack () {
-        while (!isEmpty) {
+        while (!isEmpty()) {
             pop();
         }
     }
@@ -26,7 +26,7 @@ public:
     }
 
     Envio* pop () {
-        if (isEmpty) {
+        if (isEmpty()) {
             return nullptr;
         }
         NodoPila* aux = tope;
@@ -38,7 +38,7 @@ public:
     }
 
     Envio* top () {
-        if (isEmpty) {
+        if (isEmpty()) {
             return nullptr;
         }
 
