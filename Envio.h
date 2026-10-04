@@ -1,6 +1,6 @@
 #pragma once
-#include "Estados.h"
-#include "HistorialDeMovimientos.h"
+#include "Estado.h"
+#include "HistorialDeMovimiento.h"
 #include <iostream>
 #include <iomanip>
 #include <string>

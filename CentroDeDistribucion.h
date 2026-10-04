@@ -1,6 +1,7 @@
 #pragma once
 #include "ListaDeEnvios.h"
 #include "ListaPendientes.h"
+#include "ArbolBST.h"
 #include <iostream>
 #include <string>
 
@@ -10,6 +11,7 @@ class CentroDeDistribucion {
 private:
     ListaDeEnvios registro;      // duena de todos los Envio* (pendientes y despachados)
     ListaPendientes pendientes;  // cola de prioridad; solo referencia envios del registro
+    ArbolBST indice;
 
 public:
     CentroDeDistribucion() = default;
@@ -26,6 +28,7 @@ public:
         }
         Envio* e = new Envio(cod, dest, zona, peso, nivel);
         registro.agregar(e);
+        indice.insertar(e);
         pendientes.agregar(e);
         std::cout << "Envio " << cod << " registrado correctamente.\n";
     }
@@ -108,4 +111,15 @@ public:
         std::cout << "Envio mas pesado: " << e->getCodigo() << "\n";
         std::cout << "Peso: " << e->getPeso() << " kg\n";
     }
+
+    void buscarEnBST(const std::string& cod) const {
+    int visitados;
+    std::cout << "Buscar: " << cod << "\n";
+    Envio* e = indice.buscar(cod, visitados);
+    if (e == nullptr) std::cout << "Envio no encontrado en el BST.\n";
+    else e->mostrar();
+    std::cout << "Nodos visitados: " << visitados << "\n";
+}
+    void inOrderBST() const { indice.recorridoInOrder(); }
+    void alturaBST() const { std::cout << "Altura del BST: " << indice.altura() << "\n"; }
 };

@@ -1,6 +1,5 @@
 #pragma once
 #include "Envio.h"
-#include <iostream>
 #include <string>
 
 struct NodoBST {
@@ -8,28 +7,28 @@ struct NodoBST {
     NodoBST* izq;
     NodoBST* der;
 
-    NodoBST (Envio* env) : envio (env), izq (nullptr), der(nullptr) {}
+    NodoBST(Envio* env);
 };
 
 class ArbolBST {
 private:
     NodoBST* raiz;
+    int cantidad;
 
-    void destruirRec(NodoBST* nodo) {
-        if (nodo == nullptr) return;
-        destruirRec(nodo->izq);
-        destruirRec(nodo->der);
-        delete nodo; // No libera envio* (ownership externo)
-    }
+    void destruirRec(NodoBST* nodo);
+    void inOrderRec(NodoBST* nodo) const;
+    int alturaRec(NodoBST* nodo) const;
 
 public:
-    ArbolBST () : raiz (nullptr) {}
-    ~ArbolBST () {
-        destruirRec(raiz);
-    }
-    
-    NodoBST* insertar(Envio* nuevo);
-    Envio* buscar();
-    void recorridoInOrder();
-    int altura();
+    ArbolBST();
+    ArbolBST(const ArbolBST&) = delete;
+    ArbolBST& operator=(const ArbolBST&) = delete;
+    ~ArbolBST();
+
+    bool insertar(Envio* nuevo);
+    Envio* buscar(const std::string& codigo, int& visitados, bool mostrarCamino = true) const;
+    void recorridoInOrder() const;
+    int altura() const;
+    int getCantidad() const;
+    bool estaVacio() const;
 };
