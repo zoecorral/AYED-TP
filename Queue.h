@@ -21,6 +21,9 @@ public:
         }
     }
 
+    Queue(const Queue&) = delete;
+    Queue& operator=(const Queue&) = delete;
+
 
     void enqueue (Envio* e) {
         NodoCola* nodo = new NodoCola (e);
