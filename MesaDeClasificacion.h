@@ -68,5 +68,31 @@ public:
 
     }
 
-    void ordenarLote();
+    void ordenarLote(criterio criterio) {
+        if (tamaño <= 1) {
+            criterioActual = criterio;
+            return;
+        }
+
+        for (int i = 0; i < tamaño; i++) {
+            Envio* aux = lote[i];
+            int j = i - 1;
+
+            if (criterio == criterio::CODIGO) {
+                while (j >= 0 && lote[j]->getCodigo() == aux->getCodigo()) {
+                    lote[j + 1] = lote[j];
+                    j--;
+                }
+            } else if (criterio == criterio::PESO) {
+                while (j >= 0 && lote[j]->getPeso() == aux->getPeso()) {
+                    lote[j + 1] = lote[j];
+                    j--;
+                }
+            }
+
+            lote[j + 1] = aux;
+        }
+
+        criterioActual = criterio;
+    }
 };
