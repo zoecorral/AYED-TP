@@ -62,4 +62,21 @@ public:
     bool isEmpty() const {
         return frente == nullptr;
     }
+
+    void mostrarQueue() const {
+        if (isEmpty()) {
+            return;
+        }
+
+        std::cout << "FRONT -> ";
+        NodoQueue* aux = frente;
+        while (aux != nullptr) {
+            std::cout << aux->envio->getCodigo();
+            if (aux->siguiente != nullptr) {
+                std::cout << " -> ";
+            }
+            aux = aux->siguiente;
+        }
+        std::cout << " <- REAR\n";
+    }
 };
