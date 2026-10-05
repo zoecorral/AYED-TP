@@ -190,4 +190,96 @@ void testCaso7_CasosLimite() {
     chequear(salidaDespachoVacio.find("No hay envios pendientes") != std::string::npos,
              "Despachar con la lista vacia no rompe el programa");
 
-    std::string salidaBusquedaInexistente =
+    std::string salidaBusquedaInexistente = capturarSalida([&] { cd.buscarEnvio("NO-EXISTE"); });
+    chequear(salidaBusquedaInexistente.find("Envio no encontrado") != std::string::npos,
+             "Busqueda de un codigo inexistente se informa correctamente");
+
+    capturarSalida([&] { cd.registrarEnvio("DUP-1", "D", "CENTRO", 1.0, NivelServicio::ESTANDAR); });
+    std::string salidaDuplicado =
+        capturarSalida([&] { cd.registrarEnvio("DUP-1", "D", "CENTRO", 1.0, NivelServicio::ESTANDAR); });
+    chequear(salidaDuplicado.find("ya existe un envio") != std::string::npos,
+             "No permite registrar un codigo duplicado");
+
+    std::string salidaHistUnico = capturarSalida([&] { cd.mostrarHistorial("DUP-1"); });
+    chequear(salidaHistUnico.find("RECIBIDO") != std::string::npos &&
+                 salidaHistUnico.find("EN_REPARTO") == std::string::npos &&
+                 salidaHistUnico.find("CLASIFICADO") == std::string::npos,
+             "El historial con un unico movimiento se muestra bien en ambos sentidos");
+
+    capturarSalida([&] { cd.despacharProximo(); });  // despacha el unico pendiente (DUP-1)
+    std::string salidaTrasEliminarUnico = capturarSalida([&] { cd.mostrarPendientes(); });
+    chequear(salidaTrasEliminarUnico.find("no hay envios pendientes") != std::string::npos,
+             "Eliminar el unico elemento deja la lista vacia otra vez");
+
+    capturarSalida([&] { cd.registrarEnvio("NUEVO-1", "D", "CENTRO", 1.0, NivelServicio::ESTANDAR); });
+    std::string salidaReinsercion = capturarSalida([&] { cd.mostrarPendientes(); });
+    chequear(salidaReinsercion.find("NUEVO-1") != std::string::npos,
+             "Se puede insertar de nuevo despues de vaciar la lista");
+}
+
+// ============================================================
+// Extra — RF07: marcar ENTREGADO sin pasar por despacharProximo no debe
+// dejar el envio colgado en pendientes.
+// ============================================================
+void testExtra_EntregaDirectaSacaDePendientes() {
+    std::cout << "\nExtra - Entrega directa (sin despachar) saca de pendientes\n";
+    CentroDeDistribucion cd;
+    cd.registrarEnvio("E1", "Dest", "CENTRO", 1.0, NivelServicio::ESTANDAR);
+
+    capturarSalida([&] { cd.cambiarEstado("E1", Estado::ENTREGADO, "Entrega directa"); });
+
+    std::string salidaPendientes = capturarSalida([&] { cd.mostrarPendientes(); });
+    chequear(salidaPendientes.find("E1") == std::string::npos,
+             "Un envio marcado ENTREGADO ya no figura en pendientes");
+
+    std::string salidaBuscar = capturarSalida([&] { cd.buscarEnvio("E1"); });
+    chequear(salidaBuscar.find("ENTREGADO") != std::string::npos,
+             "El envio sigue siendo consultable con su estado ENTREGADO");
+}
+
+// ============================================================
+// Extra — RF06: reprogramar un envio que todavia esta pendiente (nunca se
+// despacho) no debe dejarlo duplicado en ListaPendientes.
+// ============================================================
+void testExtra_ReprogramarSinDespacharNoDuplica() {
+    std::cout << "\nExtra - Reprogramar sin despachar no duplica en pendientes\n";
+    CentroDeDistribucion cd;
+    cd.registrarEnvio("D1", "Dest", "CENTRO", 1.0, NivelServicio::ESTANDAR);
+
+    capturarSalida([&] { cd.reprogramarEnvio("D1", "Reprogramado sin despachar"); });
+
+    std::string salidaPendientes = capturarSalida([&] { cd.mostrarPendientes(); });
+    std::size_t primera = salidaPendientes.find("D1");
+    std::size_t segunda = (primera == std::string::npos) ? std::string::npos : salidaPendientes.find("D1", primera + 1);
+    chequear(primera != std::string::npos && segunda == std::string::npos,
+             "El envio aparece una sola vez en pendientes, no duplicado");
+}
+
+void ejecutarPruebasEnvioListas() {
+    std::cout << "========== TESTS HUBFLOW (MODULO 1) ==========\n";
+
+    testCaso1_Prioridades();
+    testCaso2_PrioridadEstable();
+    testCaso3_Despacho();
+    testCaso4_Reprogramacion();
+    testCaso5_Historial();
+    testCaso6_Recursividad();
+    testCaso7_CasosLimite();
+    testExtra_EntregaDirectaSacaDePendientes();
+    testExtra_ReprogramarSinDespacharNoDuplica();
+
+    std::cout << "\n====================================\n";
+    std::cout << (totalChequeos - chequeosFallidos) << "/" << totalChequeos << " checks OK\n";
+    if (chequeosFallidos > 0) {
+        std::cout << chequeosFallidos << " checks FALLIDOS\n";
+    } else {
+        std::cout << "Todos los checks pasaron correctamente.\n";
+    }
+}
+
+#ifndef MAIN_TESTS_ORQUESTADOR
+int main() {
+    ejecutarPruebasEnvioListas();
+    return chequeosFallidos > 0 ? 1 : 0;
+}
+#endif
