@@ -169,5 +169,59 @@ public:
         
         std::cout << "El envio " << cod << " no fue encontrado.\n";
     }
+
+    void compararBusquedas (std::string cod) {
+        if (tamaño == 0) {
+            return;
+        }
+
+        if (criterioActual != criterio::CODIGO) {
+            ordenarLote(criterio::CODIGO);
+        }
+
+        // Ejecucion y conteo de busqueda lineal
+        int comparacionesLineal = 0;
+
+        for (int i = 0; i < tamaño; i++) {
+            comparacionesLineal++;
+
+            if (lote[i]->getCodigo() == cod) {
+                break;
+            }
+        }
+
+        //Ejecucion y conteo de busqueda binaria
+        int comparacionesBinaria = 0;
+
+        int izq = 0;
+        int der = tamaño - 1;
+
+        while (izq <= der) {
+            comparacionesBinaria++;
+            int mid = izq + (der - izq) / 2;
+
+            if (lote[mid]->getCodigo() == cod) {
+                break;
+            }
+
+            if (lote[mid]->getCodigo() < cod) {
+                izq = mid + 1;
+            } else {
+                der = mid - 1;
+            }
+        }
+
+        std::cout << "Codigo buscado: " << cod << "\n\n";
+
+        std::cout << "Busqueda Lineal: " << "\n";
+        std::cout << "Comparaciones: " << comparacionesLineal << "\n";
+        std::cout << "Mejor caso: O(1)\n";
+        std::cout << "Peor caso: O(n)\n\n";
+
+        std::cout << "Busqueda Binaria: " << "\n";
+        std::cout << "Comparaciones: " << comparacionesBinaria << "\n";
+        std::cout << "Mejor caso: O(1)\n";
+        std::cout << "Peor caso: O(log n)\n";
+    }
     
 };
