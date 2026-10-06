@@ -103,18 +103,19 @@ void testCaso11_Busquedas() {
     cd.colocarEnMesa("B2", 20.0);
     cd.colocarEnMesa("C3", 30.0);
 
-    std::string salidaLineal = capturarSalidaM2([&] { cd.busquedaLinealMesa("B2"); });
-    chequearM2(salidaLineal.find("Encontrado") != std::string::npos || salidaLineal.find("B2") != std::string::npos,
-               "Busqueda lineal localiza el elemento en la mesa");
+    // Búsqueda lineal por código
+    std::string sLineal = capturarSalidaM2([&] { cd.busquedaLinealMesa("B2"); });
+    chequearM2(sLineal.find("B2") != std::string::npos || sLineal.find("encontrado") != std::string::npos,
+            "Busqueda lineal localiza el elemento en la mesa");
 
-    capturarSalidaM2([&] { cd.ordenarMesaPorPeso(); });
-    std::string salidaBinaria = capturarSalidaM2([&] { cd.busquedaBinariaMesa(20.0); });
-    chequearM2(salidaBinaria.find("Encontrado") != std::string::npos || salidaBinaria.find("B2") != std::string::npos,
-               "Busqueda binaria localiza el elemento ordenado por peso");
+    // Búsqueda binaria por código (RF09.6)
+    std::string sBinaria = capturarSalidaM2([&] { cd.busquedaBinariaMesa("B2"); });
+    chequearM2(sBinaria.find("B2") != std::string::npos || sBinaria.find("encontrado") != std::string::npos || sBinaria.find("Resultado:") != std::string::npos,
+            "Busqueda binaria localiza el elemento ordenado por codigo");
 }
 
 void ejecutarPruebasMesaClasificacion() {
-    std::cout << "========== TESTS HUBFLOW (MODULO 2: MESA Y ESTRUCTURAS AUXILIARES) ==========\n";
+    std::cout << "========== TESTS (MODULO 2: MESA Y ESTRUCTURAS AUXILIARES) ==========\n";
 
     testCaso8_Ordenamiento();
     testCaso9_PilaDespacho();

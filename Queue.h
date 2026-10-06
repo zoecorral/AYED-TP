@@ -69,7 +69,7 @@ public:
         }
 
         std::cout << "FRONT -> ";
-        NodoQueue* aux = frente;
+        NodoCola* aux = frente;
         while (aux != nullptr) {
             std::cout << aux->envio->getCodigo();
             if (aux->siguiente != nullptr) {

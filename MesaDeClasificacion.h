@@ -20,7 +20,7 @@ private:
     criterio criterioActual;
 
 public:
-    MesaDeClasificacion() : lote(nullptr), capacidad(0), tamano(0), criterioActual(criterio::NINGUNO) {}
+    MesaDeClasificacion() : lote(nullptr), capacidad(0), tamaño(0), criterioActual(criterio::NINGUNO) {}
 
     ~MesaDeClasificacion() {
         liberarLote();
@@ -79,12 +79,12 @@ public:
             int j = i - 1;
 
             if (criterio == criterio::CODIGO) {
-                while (j >= 0 && lote[j]->getCodigo() == aux->getCodigo()) {
+                while (j >= 0 && lote[j]->getCodigo() > aux->getCodigo()) {
                     lote[j + 1] = lote[j];
                     j--;
                 }
             } else if (criterio == criterio::PESO) {
-                while (j >= 0 && lote[j]->getPeso() == aux->getPeso()) {
+                while (j >= 0 && lote[j]->getPeso() > aux->getPeso()) {
                     lote[j + 1] = lote[j];
                     j--;
                 }
@@ -97,7 +97,7 @@ public:
     }
 
     void cargarQueue(Queue& colaPreparacion) {
-        if (tamaño = 0) {
+        if (tamaño == 0) {
             return;
         }
 
@@ -222,6 +222,28 @@ public:
         std::cout << "Comparaciones: " << comparacionesBinaria << "\n";
         std::cout << "Mejor caso: O(1)\n";
         std::cout << "Peor caso: O(log n)\n";
+    }
+
+    void mostrarLote() const {
+        for (int i = 0; i < tamaño; i++) {
+            std::cout << lote[i]->getCodigo() << " ";
+        }
+        std::cout << std::endl;
+    }
+
+    void agregarEnvio(Envio* nuevoEnvio) {
+        if (tamaño == capacidad) {
+            int nuevaCapacidad = (capacidad == 0) ? 10 : capacidad * 2;
+            Envio** nuevoLote = new Envio*[nuevaCapacidad];
+            for (int i = 0; i < tamaño; i++) {
+                nuevoLote[i] = lote[i];
+            }
+            delete[] lote;
+            lote = nuevoLote;
+            capacidad = nuevaCapacidad;
+        }
+        lote[tamaño] = nuevoEnvio;
+        tamaño++;
     }
     
 };

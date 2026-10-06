@@ -1,4 +1,4 @@
-// Tests Módulo 3: Árbol Binario de Búsqueda (Caso 12)
+// Tests Modulo 3: Árbol Binario de Búsqueda (Caso 12)
 // Basado en las pruebas de BST con metadatos de altura y nodos visitados.
 
 #include "ArbolBST.h"
@@ -68,7 +68,7 @@ void testCaso12_ArbolBST() {
     int visitados = 0;
     Envio* hallado = arbol.buscar("PKG-1001", visitados, true);
 
-    chequearM3(hallado != nullptr && hallado->getCodigoTracking() == "PKG-1001",
+    chequearM3(hallado != nullptr && hallado->getCodigo() == "PKG-1001",
                "La busqueda localiza correctamente el paquete en el BST");
     chequearM3(visitados > 0,
                "Se registra la cantidad de visitas realizadas durante la busqueda");
@@ -80,7 +80,7 @@ void testCaso12_ArbolBST() {
 }
 
 void ejecutarPruebasBST() {
-    std::cout << "========== TESTS HUBFLOW (MODULO 3: ARBOL BST) ==========\n";
+    std::cout << "========== TESTS (MODULO 3: ARBOL BST) ==========\n";
 
     testCaso12_ArbolBST();
 

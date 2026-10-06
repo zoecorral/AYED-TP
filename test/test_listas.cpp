@@ -256,7 +256,7 @@ void testExtra_ReprogramarSinDespacharNoDuplica() {
 }
 
 void ejecutarPruebasEnvioListas() {
-    std::cout << "========== TESTS HUBFLOW (MODULO 1) ==========\n";
+    std::cout << "========== TESTS (MODULO 1) ==========\n";
 
     testCaso1_Prioridades();
     testCaso2_PrioridadEstable();

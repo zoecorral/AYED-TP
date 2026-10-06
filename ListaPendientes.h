@@ -129,7 +129,7 @@ public:
         return masPesadoDeZonaRec(comienzo, zona);
     }
 
-    NodoPendiente* getComienzo() {return comienzo}
+    NodoPendiente* getComienzo() {return comienzo;}
 
 private:
     // Caso base: lista vacia -> resumen neutro. Caso recursivo: primero se

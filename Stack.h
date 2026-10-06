@@ -45,7 +45,7 @@ public:
         return tope->envio;
     }
 
-    bool isEmpty () {
+    bool isEmpty () const {
         return tope == nullptr;
     }
 
@@ -54,7 +54,7 @@ public:
             return;
         }
 
-        NodoStack* aux = tope;
+        NodoPila* aux = tope;
         
         std::cout << "TOP\n | \n";
         

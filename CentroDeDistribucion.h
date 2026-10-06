@@ -2,6 +2,9 @@
 #include "ListaDeEnvios.h"
 #include "ListaPendientes.h"
 #include "ArbolBST.h"
+#include "MesaDeClasificacion.h"
+#include "Queue.h"
+#include "Stack.h"
 #include <iostream>
 #include <string>
 
@@ -12,6 +15,9 @@ private:
     ListaDeEnvios registro;      // duena de todos los Envio* (pendientes y despachados)
     ListaPendientes pendientes;  // cola de prioridad; solo referencia envios del registro
     ArbolBST indice;
+    MesaDeClasificacion mesa;
+    Queue colaEscaneo;
+    Stack pilaDespacho;
 
 public:
     CentroDeDistribucion() = default;
@@ -122,4 +128,48 @@ public:
 }
     void inOrderBST() const { indice.recorridoInOrder(); }
     void alturaBST() const { std::cout << "Altura del BST: " << indice.altura() << "\n"; }
+
+    void colocarEnMesa(const std::string& id, double peso) {
+        Envio* nuevoEnvio = new Envio(id, "Desconocido", "General", peso, NivelServicio::ESTANDAR);
+        mesa.agregarEnvio(nuevoEnvio);
+    }
+
+    void ordenarMesaPorPeso() {
+        mesa.ordenarLote(criterio::PESO);
+        mesa.mostrarLote();
+    }
+
+    void apilarDespacho(const std::string& id) {
+        Envio* e = new Envio(id, "Desconocido", "General", 0.0, NivelServicio::ESTANDAR);
+        pilaDespacho.push(e);
+    }
+
+    void desapilarDespacho() {
+        if (!pilaDespacho.isEmpty()) {
+            Envio* e = pilaDespacho.top();
+            pilaDespacho.pop();
+            std::cout << e->getCodigo() << std::endl; // Imprime 'ENV-2', luego 'ENV-1'
+        }
+    }
+
+    void encolarEscaneo(const std::string& id) {
+        Envio* e = new Envio(id, "Desconocido", "General", 0.0, NivelServicio::ESTANDAR);
+        colaEscaneo.enqueue(e);
+    }
+
+    void desencolarEscaneo() {
+        if (!colaEscaneo.isEmpty()) {
+            Envio* e = colaEscaneo.dequeue();
+            std::cout << e->getCodigo() << std::endl; // Imprime 'PKG-A', luego 'PKG-B'
+        }
+    }
+
+    void busquedaLinealMesa(const std::string& id) {
+        mesa.compararBusquedas(id);
+    }
+
+    void busquedaBinariaMesa(const std::string& id) {
+        // En tu clase la búsqueda binaria se realiza por código std::string:
+        mesa.busquedaBinaria(id);
+    }
 };
