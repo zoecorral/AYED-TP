@@ -1,0 +1,26 @@
+cmake_minimum_required(VERSION 3.20)
+project(HubFlow)
+
+set(CMAKE_CXX_STANDARD 17)
+
+# Incluir el directorio raíz para que los .h se encuentren correctamente
+include_directories(${CMAKE_SOURCE_DIR})
+
+# Archivos de código fuente compartidos de la aplicación
+set(SOURCES
+    CentroDeDistribucion.cpp
+    Envio.cpp
+    ArbolBST.cpp
+    # Agregá aquí otros .cpp de tu proyecto si los tenés (ej. MesaClasificacion.cpp)
+)
+
+# 1. Aplicación Principal
+add_executable(HubFlow main.cpp ${SOURCES})
+
+# 2. Ejecutables Independientes de Tests (uno por módulo)
+add_executable(test_envios tests/test_envios.cpp ${SOURCES})
+add_executable(test_mesa tests/test_mesa_clasificacion.cpp ${SOURCES})
+add_executable(test_bst tests/test_bst.cpp ${SOURCES})
+
+# 3. Orquestador de pruebas (opcional si usás un test_main.cpp)
+add_executable(HubFlowTests tests/test_main.cpp ${SOURCES})
