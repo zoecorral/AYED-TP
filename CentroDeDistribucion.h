@@ -148,7 +148,7 @@ public:
         if (!pilaDespacho.isEmpty()) {
             Envio* e = pilaDespacho.top();
             pilaDespacho.pop();
-            std::cout << e->getCodigo() << std::endl; // Imprime 'ENV-2', luego 'ENV-1'
+            std::cout << e->getCodigo() << std::endl; 
         }
     }
 
@@ -160,7 +160,7 @@ public:
     void desencolarEscaneo() {
         if (!colaEscaneo.isEmpty()) {
             Envio* e = colaEscaneo.dequeue();
-            std::cout << e->getCodigo() << std::endl; // Imprime 'PKG-A', luego 'PKG-B'
+            std::cout << e->getCodigo() << std::endl; 
         }
     }
 
@@ -169,7 +169,6 @@ public:
     }
 
     void busquedaBinariaMesa(const std::string& id) {
-        // En tu clase la búsqueda binaria se realiza por código std::string:
         mesa.busquedaBinaria(id);
     }
 };
