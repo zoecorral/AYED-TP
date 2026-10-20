@@ -28,9 +28,9 @@ public:
         return (bit & (1 << pos)) != 0; // ve si el bit esta activo
     }
 
-    int count () {
+    int count() const {
         int c = 0;
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i <= 4; i++) {
             if (test (i)) {
                 c++;
             }
@@ -61,7 +61,7 @@ public:
     }
 
     void mostrar() const {
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i <= 4; i++) {
             std::cout << (test(i) ? '1' : '0');
         }
         std::cout << std::endl;
