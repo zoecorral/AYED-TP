@@ -1,11 +1,8 @@
 #ifndef ARBOLBPLUS_H
 #define ARBOLBPLUS_H
+#include "Envio.h"
 #include <string>
-class Envio {
-public:
-    void mostrar() const {}
-    std::string getCodigo() const { return ""; }
-};
+
 const int ORDEN = 4; // esto es para hacer que el arbol solo pueda tener hasta 4 hijos.
 const int MAX_CLAVES = ORDEN - 1; //esto es el máximo de claves que puede tener (teoricamente debería tener 1 menos que el orden SIEMPRE)
 struct NodoBPlus{
@@ -35,31 +32,40 @@ struct NodoBPlus{
 class ArbolBPlus {
 private:
     NodoBPlus* raiz;  // El primer nodo del programa por el cual se inicia el programa
-    void insertarAux(NodoBPlus* nodo, Envio* envio); //funcion recursiva auxiliar para el insertar
+    int cantidad;
+
     void destruirRec(NodoBPlus* actual);
     int alturaRec(NodoBPlus* actual) const;
     void inOrderRec(NodoBPlus* actual) const;
-    // Funciones internas para partir nodos cuando se llenan
-    void dividirHoja(NodoBPlus* padre, int indiceHijo, NodoBPlus* hijo);
-    void dividirNodoInterno(NodoBPlus* padre, int indiceHijo, NodoBPlus* hijo);
-    void insertarEnNodoNoLleno(NodoBPlus* nodo, Envio* envio);
-    Envio* buscarAux(NodoBPlus* nodo, std::string codigo);
+    void insertarRec(NodoBPlus* nodo, Envio* envio, std::string& claveSube, NodoBPlus*& nuevoDerecho); //funcion recursiva auxiliar para el insertar
+    void dividirHoja(NodoBPlus* hoja, std::string& claveSube, NodoBPlus*& nuevoDerecho);
+    void dividirNodoInterno(NodoBPlus* nodo, std::string& claveSube, NodoBPlus*& nuevoDerecho);
+    int profundidadHojas (NodoBPlus* hoja, std::string& claveSube, NodoBPlus*& nuevoDerecho);
+    void mostrarEstructuraRec (NodoBPlus* actual, int nivel) const;
 
 public:
     ArbolBPlus();   // Inicializa la raíz en nullptr
+    ArbolBPlus (const ArbolBPlus&) = delete;
+    ArbolBPlus& operator=(const ArbolBPlus&) = delete;
     ~ArbolBPlus();  // Libera la memoria consumida por los nodos
+
     bool estaVacio() const;
-    Envio* buscar(std::string codigo);
+    int getCantidad() const;
     int altura() const;
-    void recorridoInOrder() const;
-    //Inserta un envío manteniendo el orden y balanceo
-    void insertar(Envio* envio);
+
+    //Devuelve false (sin insertar) si el envio es nulo o el código ya existe
+    bool insertar(Envio* envio);
 
     // Busca un PKG exacto navegando de la raíz a las hojas
+    Envio* buscar(const std::string& codigo, int& visitados) const;
     Envio* buscar(const std::string& codigo) const;
 
-    // Busca la hoja inicial y recorre la lista enlazada juntando envíos
-    void buscarPorRango(const std::string& desde, const std::string& hasta) const;
+    // Busca los envios con codigo dentro del intervalo, siguiendo los enlaces entre hojas. Devuelve la cantidad de envios encontrados.
+    int buscarPorRango(const std::string& desde, const std::string& hasta) const;
+
+    void recorridoInOrder() const;
+    bool hojasAlMismoNivel() const;
+    void mostrarEstructura() const;
 };
 
 #endif // ARBOLBPLUS_H
