@@ -183,6 +183,24 @@ static void probarSet() {
     verificar(interseccionDisjunta.empty(), "La interseccion de conjuntos disjuntos queda vacia");
 }
 
+static void probarPropiedadEnviosAuxiliares() {
+    std::cout << "\nCaso E - Propiedad de envios auxiliares\n";
+    std::string salida = capturarSalida([&] {
+        CentroDeDistribucion cd;
+        cd.colocarEnMesa("AUX-MESA", 2.5);
+        cd.ordenarMesaPorPeso();
+        cd.apilarDespacho("AUX-PILA");
+        cd.desapilarDespacho();
+        cd.encolarEscaneo("AUX-COLA");
+        cd.desencolarEscaneo();
+    });
+    verificar(salida.find("AUX-PILA") != std::string::npos &&
+                  salida.find("AUX-COLA") != std::string::npos,
+              "Los envios auxiliares siguen disponibles mientras la pila y la cola los referencian");
+    // Al salir del bloque, CentroDeDistribucion destruye primero las estructuras
+    // que referencian estos envios y luego libera los objetos propietarios.
+}
+
 static void probarIntegracion() {
     std::cout << "\nCaso D - Integracion con HubFlow\n";
     CentroDeDistribucion cd;
@@ -201,6 +219,7 @@ static void probarIntegracion() {
         cd.cambiarEstado("PKG-2001", Estado::CLASIFICADO, "Clasificado");
         cd.cambiarEstado("PKG-2001", Estado::EN_REPARTO, "En reparto");
         cd.reprogramarEnvio("PKG-2001", "No habia nadie en el domicilio");
+        cd.cambiarEstado("PKG-2001", Estado::ENTREGADO, "Entregado luego de reprogramar");
     });
     std::string bitset = capturarSalida([&] { cd.mostrarBitSetEnvio("PKG-2001"); });
     std::string comparacionBits = capturarSalida([&] {
@@ -210,8 +229,9 @@ static void probarIntegracion() {
                   bitset.find("CLASIFICADO") != std::string::npos &&
                   bitset.find("EN_REPARTO") != std::string::npos &&
                   bitset.find("REPROGRAMADO") != std::string::npos &&
-                  bitset.find("Cantidad de estados diferentes: 4") != std::string::npos,
-              "Los cambios de estado actualizan el BitSet historico automaticamente");
+                  bitset.find("ENTREGADO") != std::string::npos &&
+                  bitset.find("Cantidad de estados diferentes: 5") != std::string::npos,
+              "Los cinco estados quedan registrados historicamente en el BitSet");
     verificar(comparacionBits.find("Estados en comun") != std::string::npos &&
                   comparacionBits.find("Estados que aparecen en solo uno") != std::string::npos,
               "La integracion permite comparar estados comunes y exclusivos de dos envios");
@@ -241,6 +261,7 @@ int main() {
     probarBitSet();
     probarSet();
     probarIntegracion();
+    probarPropiedadEnviosAuxiliares();
 
     std::cout << "\nResultado: " << (chequeos - fallidos) << "/" << chequeos << " checks OK.\n";
     if (fallidos != 0) std::cout << fallidos << " checks fallaron.\n";

@@ -66,11 +66,12 @@ La opción **11. Consultas avanzadas de envíos** integra las estructuras nuevas
 
 ### Gestión de memoria
 
-- `ListaDeEnvios` es la única propietaria de los objetos `Envio` y los destruye en su destructor.
-- `ArbolBST`, `ArbolBPlus`, `ListaPendientes` y las estructuras que referencian envíos no destruyen esos objetos. El árbol B+ únicamente libera sus propios nodos.
+- `ListaDeEnvios registro` es propietaria de los objetos `Envio` registrados en HubFlow.
+- `ListaDeEnvios enviosAuxiliares` es propietaria de los objetos creados por métodos auxiliares antiguos para la mesa, la pila y la cola. Así siguen vivos mientras esas estructuras los referencian y se liberan al destruir el centro.
+- `ArbolBST`, `ArbolBPlus`, `ListaPendientes`, la mesa, la pila y la cola no destruyen los objetos que referencian. Cada estructura libera únicamente sus propios nodos o arreglos.
 - El `BitSet` es un miembro de `Envio`, por lo que su vida útil coincide con la del envío.
 - Cada `Set` es propietario de sus nodos y guarda copias de los códigos, no punteros a `Envio`.
-- El orden de los miembros de `CentroDeDistribucion` hace que los índices se destruyan antes que el registro que posee los envíos.
+- El orden de los miembros de `CentroDeDistribucion` hace que las estructuras no propietarias se destruyan antes que `enviosAuxiliares` y `registro`, que liberan los objetos.
 
 ### Complejidad temporal
 
@@ -101,5 +102,5 @@ cmake --build build -j4
 ctest --test-dir build --output-on-failure
 ```
 
-La suite `ConsultasAvanzadas` prueba divisiones del B+, búsquedas, rangos, duplicados, operaciones de bits, conjuntos y su integración con el registro. En la versión revisada se ejecutaron las cinco suites de CTest correctamente; la suite nueva pasó sus 41 comprobaciones. También se verificó una compilación con `-Wall -Wextra -Wpedantic` y una ejecución de los tests nuevos con AddressSanitizer y UndefinedBehaviorSanitizer.
+La suite `ConsultasAvanzadas` prueba divisiones del B+, búsquedas, rangos, duplicados, los cinco estados históricos, operaciones de bits, conjuntos, integración con el registro y el ciclo de vida de los envíos creados por los métodos auxiliares. La suite nueva contiene 42 comprobaciones. Se compila con `-Wall -Wextra -Wpedantic` sin advertencias y las cinco suites de CTest deben ejecutarse correctamente.
 

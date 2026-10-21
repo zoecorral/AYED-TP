@@ -14,8 +14,9 @@
 // de pendientes, y gestiona la memoria en cascada.
 class CentroDeDistribucion {
 private:
-    ListaDeEnvios registro;      // duena de todos los Envio* (pendientes y despachados)
-    ListaPendientes pendientes;  // cola de prioridad; solo referencia envios del registro
+    ListaDeEnvios registro;          // Duena de los envios registrados en HubFlow.
+    ListaDeEnvios enviosAuxiliares;  // Duena de envios creados por metodos auxiliares antiguos.
+    ListaPendientes pendientes;      // Solo referencia envios; no los destruye.
     ArbolBST indice;              // Indice anterior, se conserva para la funcionalidad existente.
     ArbolBPlus indiceAvanzado;     // Indice B+: no es dueño de los Envio, solo los referencia.
     MesaDeClasificacion mesa;
@@ -39,8 +40,10 @@ private:
 public:
     CentroDeDistribucion() = default;
 
-    // Al destruirse, `registro` libera en cascada todos los Envio* (y sus
-    // historiales); `pendientes` solo libera sus propios nodos.
+    // Al destruirse, las estructuras que guardan referencias se destruyen
+    // antes que los propietarios. `registro` y `enviosAuxiliares` liberan
+    // sus Envio; las listas, indices, cola, pila y mesa liberan solo sus nodos
+    // o arreglos auxiliares.
     ~CentroDeDistribucion() = default;
 
     // RF01 — Registrar nuevo envio
@@ -248,6 +251,7 @@ public:
 
     void colocarEnMesa(const std::string& id, double peso) {
         Envio* nuevoEnvio = new Envio(id, "Desconocido", "General", peso, NivelServicio::ESTANDAR);
+        enviosAuxiliares.agregar(nuevoEnvio);
         mesa.agregarEnvio(nuevoEnvio);
     }
 
@@ -258,6 +262,7 @@ public:
 
     void apilarDespacho(const std::string& id) {
         Envio* e = new Envio(id, "Desconocido", "General", 0.0, NivelServicio::ESTANDAR);
+        enviosAuxiliares.agregar(e);
         pilaDespacho.push(e);
     }
 
@@ -271,6 +276,7 @@ public:
 
     void encolarEscaneo(const std::string& id) {
         Envio* e = new Envio(id, "Desconocido", "General", 0.0, NivelServicio::ESTANDAR);
+        enviosAuxiliares.agregar(e);
         colaEscaneo.enqueue(e);
     }
 
