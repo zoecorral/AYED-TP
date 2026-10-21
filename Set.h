@@ -13,6 +13,7 @@ struct NodoSet {
     NodoSet(const std::string& c) : clave(c), siguiente(nullptr) {}
 };
 
+/** @brief Conjunto ordenado de codigos de seguimiento, sin elementos repetidos. */
 class Set {
 private:
     NodoSet* cabeza;

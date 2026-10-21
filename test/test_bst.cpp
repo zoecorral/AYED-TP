@@ -40,3 +40,8 @@ void test_BST() {
 
     std::cout << "=== FIN DE PRUEBAS ===\n";
 }
+
+int main() {
+    test_BST();
+    return 0;
+}

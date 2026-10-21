@@ -1,9 +1,11 @@
 #pragma once
 #include "Estado.h"
 #include "HistorialDeMovimiento.h"
+#include "BitSet.h"
 #include <iostream>
 #include <iomanip>
 #include <string>
+#include <utility>
 
 // Representa un paquete que circula por el centro de distribucion.
 //
@@ -20,11 +22,13 @@ private:
     Estado estado;
     int intentos;
     HistorialDeMovimientos historial;
+    BitSet estadosRegistrados; // Estados que el envio alcanzo alguna vez.
 
 public:
     Envio(std::string cod, std::string dest, std::string zon, double p, NivelServicio niv)
         : codigo(std::move(cod)), destinatario(std::move(dest)), zona(std::move(zon)), peso(p),
           nivel(niv), estado(Estado::RECIBIDO), intentos(0) {
+        estadosRegistrados.set(static_cast<int>(estado));
         historial.agregarMovimiento(estadoToString(estado), "Ingreso al centro de distribucion");
     }
 
@@ -43,10 +47,17 @@ public:
     int getIntentos()                const { return intentos; }
     bool estaEntregado()            const { return estado == Estado::ENTREGADO; }
 
+    // Devuelve el historial de estados como bits (bit 0 = RECIBIDO, etc.).
+    const BitSet& getEstadosRegistrados() const { return estadosRegistrados; }
+    bool pasoPorEstado(Estado e) const { return estadosRegistrados.test(static_cast<int>(e)); }
+    int cantidadEstadosRegistrados() const { return estadosRegistrados.count(); }
+    bool estuvoReprogramado() const { return pasoPorEstado(Estado::REPROGRAMADO); }
+
     // Cambia el estado Y deja constancia en el historial en un solo paso,
     // para que sea imposible actualizar uno sin el otro.
     void cambiarEstado(Estado nuevoEstado, const std::string& observacion) {
         estado = nuevoEstado;
+        estadosRegistrados.set(static_cast<int>(nuevoEstado));
         historial.agregarMovimiento(estadoToString(nuevoEstado), observacion);
     }
 

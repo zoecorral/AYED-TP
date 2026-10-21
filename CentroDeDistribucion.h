@@ -2,6 +2,8 @@
 #include "ListaDeEnvios.h"
 #include "ListaPendientes.h"
 #include "ArbolBST.h"
+#include "ArbolBPlus.h"
+#include "Set.h"
 #include "MesaDeClasificacion.h"
 #include "Queue.h"
 #include "Stack.h"
@@ -14,10 +16,25 @@ class CentroDeDistribucion {
 private:
     ListaDeEnvios registro;      // duena de todos los Envio* (pendientes y despachados)
     ListaPendientes pendientes;  // cola de prioridad; solo referencia envios del registro
-    ArbolBST indice;
+    ArbolBST indice;              // Indice anterior, se conserva para la funcionalidad existente.
+    ArbolBPlus indiceAvanzado;     // Indice B+: no es dueño de los Envio, solo los referencia.
     MesaDeClasificacion mesa;
     Queue colaEscaneo;
     Stack pilaDespacho;
+
+    // Traduce los bits activos a nombres de estados para las consultas.
+    void mostrarEstadosDeBits(const BitSet& bits) const {
+        bool primero = true;
+        for (int i = 0; i <= 4; i++) {
+            if (bits.test(i)) {
+                if (!primero) std::cout << ", ";
+                std::cout << estadoToString(static_cast<Estado>(i));
+                primero = false;
+            }
+        }
+        if (primero) std::cout << "(ninguno)";
+        std::cout << "\n";
+    }
 
 public:
     CentroDeDistribucion() = default;
@@ -35,6 +52,7 @@ public:
         Envio* e = new Envio(cod, dest, zona, peso, nivel);
         registro.agregar(e);
         indice.insertar(e);
+        indiceAvanzado.insertar(e);
         pendientes.agregar(e);
         std::cout << "Envio " << cod << " registrado correctamente.\n";
     }
@@ -119,13 +137,112 @@ public:
     }
 
     void buscarEnBST(const std::string& cod) const {
-    int visitados;
-    std::cout << "Buscar: " << cod << "\n";
-    Envio* e = indice.buscar(cod, visitados);
-    if (e == nullptr) std::cout << "Envio no encontrado en el BST.\n";
-    else e->mostrar();
-    std::cout << "Nodos visitados: " << visitados << "\n";
-}
+        int visitados;
+        std::cout << "Buscar: " << cod << "\n";
+        Envio* e = indice.buscar(cod, visitados);
+        if (e == nullptr) std::cout << "Envio no encontrado en el BST.\n";
+        else e->mostrar();
+        std::cout << "Nodos visitados: " << visitados << "\n";
+    }
+
+    /** @brief Busca un envio mediante el indice B+ e informa los nodos visitados. */
+    void buscarEnBPlus(const std::string& codigo) const {
+        int visitados = 0;
+        Envio* e = indiceAvanzado.buscar(codigo, visitados);
+        if (e == nullptr) {
+            std::cout << "Envio no encontrado en el arbol B+.\n";
+        } else {
+            e->mostrar();
+        }
+        std::cout << "Nodos B+ visitados: " << visitados << "\n";
+    }
+
+    /** @brief Consulta un rango inclusivo de codigos usando los enlaces entre hojas. */
+    void buscarRangoBPlus(const std::string& desde, const std::string& hasta) const {
+        indiceAvanzado.buscarPorRango(desde, hasta);
+    }
+
+    /** @brief Muestra los estados historicos registrados en el BitSet de un envio. */
+    void mostrarBitSetEnvio(const std::string& codigo) const {
+        Envio* e = indiceAvanzado.buscar(codigo);
+        if (e == nullptr) {
+            std::cout << "Envio no encontrado.\n";
+            return;
+        }
+
+        const BitSet& bits = e->getEstadosRegistrados();
+        std::cout << "Estados historicos de " << codigo << " (bits 4..0): ";
+        bits.mostrar();
+        std::cout << "Estados alcanzados: ";
+        mostrarEstadosDeBits(bits);
+        std::cout << "Cantidad de estados diferentes: " << bits.count() << "\n";
+        std::cout << "Paso alguna vez por REPROGRAMADO: "
+                  << (e->estuvoReprogramado() ? "SI" : "NO") << "\n";
+    }
+
+    /** @brief Compara dos BitSet: AND para estados comunes y XOR para los exclusivos. */
+    void compararBitSets(const std::string& codigoA, const std::string& codigoB) const {
+        Envio* a = indiceAvanzado.buscar(codigoA);
+        Envio* b = indiceAvanzado.buscar(codigoB);
+        if (a == nullptr || b == nullptr) {
+            std::cout << "No se pueden comparar: verifica ambos codigos.\n";
+            return;
+        }
+
+        BitSet comunes = a->getEstadosRegistrados() & b->getEstadosRegistrados();
+        BitSet diferentes = a->getEstadosRegistrados() ^ b->getEstadosRegistrados();
+        std::cout << "Estados en comun entre " << codigoA << " y " << codigoB << ": ";
+        mostrarEstadosDeBits(comunes);
+        std::cout << "Estados que aparecen en solo uno de los dos: ";
+        mostrarEstadosDeBits(diferentes);
+    }
+
+    /** @brief Devuelve un Set con los codigos de todos los envios de una zona. */
+    Set conjuntoPorZona(const std::string& zona) const {
+        Set resultado;
+        for (const NodoEnvio* nodo = registro.primero(); nodo != nullptr; nodo = nodo->siguiente) {
+            if (nodo->envio->getZona() == zona) resultado.insert(nodo->envio->getCodigo());
+        }
+        return resultado;
+    }
+
+    /** @brief Devuelve un Set con los codigos de envios de un nivel de servicio. */
+    Set conjuntoPorServicio(NivelServicio nivel) const {
+        Set resultado;
+        for (const NodoEnvio* nodo = registro.primero(); nodo != nullptr; nodo = nodo->siguiente) {
+            if (nodo->envio->getNivel() == nivel) resultado.insert(nodo->envio->getCodigo());
+        }
+        return resultado;
+    }
+
+    /** @brief Muestra los codigos de un Set y recupera los datos completos desde el B+. */
+    void mostrarConjunto(const Set& conjunto, const std::string& nombre) const {
+        std::cout << nombre << " (" << conjunto.size() << " envios): ";
+        conjunto.mostrar();
+        for (const NodoSet* nodo = conjunto.primero(); nodo != nullptr; nodo = nodo->siguiente) {
+            Envio* e = indiceAvanzado.buscar(nodo->clave);
+            if (e != nullptr) {
+                std::cout << "  ";
+                e->mostrar();
+            } else {
+                // Si ocurre esto, el Set y el índice no están sincronizados.
+                std::cout << "  Error: el codigo " << nodo->clave << " no esta en el B+.\n";
+            }
+        }
+    }
+
+    /** @brief Muestra A, B, union, interseccion y diferencia con los datos de cada envio. */
+    void mostrarOperacionesConjuntos(const Set& a, const Set& b) const {
+        Set unionAB = Set::unionDe(a, b);
+        Set interseccionAB = Set::interseccion(a, b);
+        Set diferenciaAB = Set::diferencia(a, b);
+        mostrarConjunto(a, "A");
+        mostrarConjunto(b, "B");
+        mostrarConjunto(unionAB, "A union B");
+        mostrarConjunto(interseccionAB, "A interseccion B");
+        mostrarConjunto(diferenciaAB, "A - B");
+    }
+
     void inOrderBST() const { indice.recorridoInOrder(); }
     void alturaBST() const { std::cout << "Altura del BST: " << indice.altura() << "\n"; }
 

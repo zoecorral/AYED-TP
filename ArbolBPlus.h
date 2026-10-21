@@ -28,7 +28,7 @@ struct NodoBPlus{
         for (int i = 0; i <= MAX_CLAVES; i++) envios[i] = nullptr;
     }
 };
-//Clase principal del programa
+/** @brief Indice B+ de orden 4; guarda referencias no propietarias a los envios. */
 class ArbolBPlus {
 private:
     NodoBPlus* raiz;  // El primer nodo del programa por el cual se inicia el programa
@@ -37,10 +37,10 @@ private:
     void destruirRec(NodoBPlus* actual);
     int alturaRec(NodoBPlus* actual) const;
     void inOrderRec(NodoBPlus* actual) const;
-    void insertarRec(NodoBPlus* nodo, Envio* envio, std::string& claveSube, NodoBPlus*& nuevoDerecho); //funcion recursiva auxiliar para el insertar
+    bool insertarRec(NodoBPlus* nodo, Envio* envio, std::string& claveSube, NodoBPlus*& nuevoDerecho); // Inserta y devuelve false si el codigo ya existe.
     void dividirHoja(NodoBPlus* hoja, std::string& claveSube, NodoBPlus*& nuevoDerecho);
     void dividirNodoInterno(NodoBPlus* nodo, std::string& claveSube, NodoBPlus*& nuevoDerecho);
-    int profundidadHojas (NodoBPlus* hoja, std::string& claveSube, NodoBPlus*& nuevoDerecho);
+    int profundidadHojas(NodoBPlus* actual, int nivel, bool& parejo, int& nivelHojas) const;
     void mostrarEstructuraRec (NodoBPlus* actual, int nivel) const;
 
 public:
@@ -54,9 +54,11 @@ public:
     int altura() const;
 
     //Devuelve false (sin insertar) si el envio es nulo o el código ya existe
+    /** @brief Inserta un envio; devuelve false si es nulo o su codigo ya existe. */
     bool insertar(Envio* envio);
 
     // Busca un PKG exacto navegando de la raíz a las hojas
+    /** @brief Busca un codigo y devuelve la cantidad de nodos visitados. */
     Envio* buscar(const std::string& codigo, int& visitados) const;
     Envio* buscar(const std::string& codigo) const;
 

@@ -3,6 +3,7 @@
 #include <iostream>
 
 
+/** @brief Representa con cinco bits los estados alcanzados historicamente por un envio. */
 class BitSet {
 private:
     unsigned char bit; // tipo de 8 bits, aunque solo usamos 5
@@ -42,26 +43,26 @@ public:
         return (bit & 0x1F) != 0; //determina si existe algun bit activo utilizando la mascara 0x1F (0001 1111)
     }
 
-    BitSet operator& (const BitSet& otro) {
+    BitSet operator& (const BitSet& otro) const {
         BitSet res;
         res.bit = (this->bit & otro.bit) & 0x1F;
         return res;
     }
 
-    BitSet operator| (const BitSet& otro) {
+    BitSet operator| (const BitSet& otro) const {
         BitSet res;
         res.bit = (this->bit | otro.bit) & 0x1F;
         return res;
     }
 
-    BitSet operator^ (const BitSet& otro) {
+    BitSet operator^ (const BitSet& otro) const {
         BitSet res;
         res.bit = (this->bit ^ otro.bit) & 0x1F;
         return res;
     }
 
     void mostrar() const {
-        for (int i = 0; i <= 4; i++) {
+        for (int i = 4; i >= 0; i--) {
             std::cout << (test(i) ? '1' : '0');
         }
         std::cout << std::endl;

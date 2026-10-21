@@ -87,6 +87,9 @@ public:
         }
     }
 
+    // Permite recorrer el registro sin transferir la propiedad de sus nodos.
+    const NodoEnvio* primero() const { return comienzo; }
+
     int getCantidad() const { return cantidad; }
     bool estaVacia()  const { return comienzo == nullptr; }
 };

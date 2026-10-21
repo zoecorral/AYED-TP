@@ -54,5 +54,52 @@ g++ -std=c++17 -Wall -Wextra -o hubflow *.cpp
 
 - `*.cpp` / `*.hpp` — código fuente del sistema.
 
+---
 
- 
+## Ampliación: consultas avanzadas de envíos
+
+La opción **11. Consultas avanzadas de envíos** integra las estructuras nuevas sin reemplazar el menú anterior:
+
+- **Árbol B+ de orden 4:** indexa los envíos por código. Las hojas guardan el código y un `Envio*`, y están enlazadas para recorrer rangos en orden. La búsqueda individual informa cuántos nodos visitó. No se permiten códigos duplicados.
+- **BitSet:** cada objeto `Envio` mantiene cinco bits históricos: `RECIBIDO`, `CLASIFICADO`, `EN_REPARTO`, `REPROGRAMADO` y `ENTREGADO`. El constructor activa `RECIBIDO` y cada cambio de estado activa el bit correspondiente sin desactivar los anteriores.
+- **Set:** lista simplemente enlazada ordenada de códigos sin duplicados. Permite insertar, eliminar, consultar pertenencia, unión, intersección y diferencia. Los resultados recuperan la información completa mediante el índice B+.
+
+### Gestión de memoria
+
+- `ListaDeEnvios` es la única propietaria de los objetos `Envio` y los destruye en su destructor.
+- `ArbolBST`, `ArbolBPlus`, `ListaPendientes` y las estructuras que referencian envíos no destruyen esos objetos. El árbol B+ únicamente libera sus propios nodos.
+- El `BitSet` es un miembro de `Envio`, por lo que su vida útil coincide con la del envío.
+- Cada `Set` es propietario de sus nodos y guarda copias de los códigos, no punteros a `Envio`.
+- El orden de los miembros de `CentroDeDistribucion` hace que los índices se destruyan antes que el registro que posee los envíos.
+
+### Complejidad temporal
+
+Sea `n` la cantidad de envíos o códigos de un conjunto, `m` la cantidad del segundo conjunto y `k` la cantidad de resultados del rango. El orden del B+ es fijo (4) y mantiene todas las hojas a la misma profundidad.
+
+| Estructura | Operación | Mejor caso | Peor caso |
+|---|---|---:|---:|
+| B+ | Insertar | O(log n) | O(log n) |
+| B+ | Buscar por código | O(log n) | O(log n) |
+| B+ | Buscar por rango | O(log n) | O(log n + k), hasta O(n) |
+| BitSet | `set`, `reset`, `test` | O(1) | O(1) |
+| BitSet | `count` | O(1) | O(1) |
+| BitSet | AND, OR, XOR | O(1) | O(1) |
+| Set | Insertar | O(1) | O(n) |
+| Set | Eliminar | O(1) | O(n) |
+| Set | Pertenencia (`contains`) | O(1) | O(n) |
+| Set | Unión | O(1) | O(n + m) |
+| Set | Intersección | O(1) | O(n + m) |
+| Set | Diferencia | O(1) | O(n + m) |
+
+El mejor caso de las operaciones básicas de `Set` ocurre cuando el elemento está al comienzo o el conjunto está vacío. Para las operaciones entre conjuntos, el mejor caso constante corresponde a entradas vacías; el peor caso recorre las dos listas ordenadas. `count()` y las operaciones del `BitSet` son O(1) porque el número de bits está fijado en cinco.
+
+### Compilar y ejecutar los tests
+
+```bash
+cmake -S . -B build
+cmake --build build -j4
+ctest --test-dir build --output-on-failure
+```
+
+La suite `ConsultasAvanzadas` prueba divisiones del B+, búsquedas, rangos, duplicados, operaciones de bits, conjuntos y su integración con el registro. En la versión revisada se ejecutaron las cinco suites de CTest correctamente; la suite nueva pasó sus 41 comprobaciones. También se verificó una compilación con `-Wall -Wextra -Wpedantic` y una ejecución de los tests nuevos con AddressSanitizer y UndefinedBehaviorSanitizer.
+

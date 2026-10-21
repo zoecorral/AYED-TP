@@ -15,8 +15,109 @@ void mostrarMenu() {
     std::cout << "8. Resumen recursivo por zona\n";
     std::cout << "9. Envio mas pesado por zona (desafio)\n";
     std::cout << "10. Consultar indice BST por codigo\n";
-    std::cout << "11. Finalizar\n";
+    std::cout << "11. Consultas avanzadas de envios (B+, BitSet y Set)\n";
+    std::cout << "12. Finalizar\n";
     std::cout << "Opcion: ";
+}
+
+// Pide un criterio y construye un Set de codigos a partir del registro actual.
+Set pedirConjunto(CentroDeDistribucion& cd, const std::string& nombre) {
+    int criterio;
+    std::cout << "Criterio para el conjunto " << nombre << ":\n";
+    std::cout << "  1. Zona\n";
+    std::cout << "  2. Nivel de servicio\n";
+    std::cout << "Opcion: ";
+    if (!(std::cin >> criterio)) {
+        std::cin.clear();
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        std::cout << "Criterio invalido; se usara un conjunto vacio.\n";
+        return Set();
+    }
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
+    if (criterio == 1) {
+        std::string zona;
+        std::cout << "Zona: ";
+        std::getline(std::cin, zona);
+        return cd.conjuntoPorZona(zona);
+    }
+    if (criterio == 2) {
+        int nivelOpcion;
+        NivelServicio nivel;
+        std::cout << "Nivel (1=EXPRESS, 2=PRIORITARIO, 3=ESTANDAR): ";
+        if (!(std::cin >> nivelOpcion)) {
+            std::cin.clear();
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            std::cout << "Nivel invalido; se usara un conjunto vacio.\n";
+            return Set();
+        }
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        if (intANivel(nivelOpcion, nivel)) return cd.conjuntoPorServicio(nivel);
+        std::cout << "Nivel invalido; se usara un conjunto vacio.\n";
+        return Set();
+    }
+
+    std::cout << "Criterio invalido; se usara un conjunto vacio.\n";
+    return Set();
+}
+
+// Submenu de RF14: consultas mediante las tres estructuras nuevas.
+void menuConsultasAvanzadas(CentroDeDistribucion& cd) {
+    int opcionAvanzada = 0;
+    do {
+        std::cout << "\n--- CONSULTAS AVANZADAS ---\n";
+        std::cout << "1. Buscar envio por codigo (arbol B+)\n";
+        std::cout << "2. Buscar envios por rango de codigos\n";
+        std::cout << "3. Consultar estados historicos (BitSet)\n";
+        std::cout << "4. Comparar estados de dos envios (BitSet)\n";
+        std::cout << "5. Crear conjuntos y operar A/B (Set)\n";
+        std::cout << "6. Mostrar conjuntos por zona o servicio (Set)\n";
+        std::cout << "0. Volver al menu principal\n";
+        std::cout << "Opcion: ";
+
+        if (!(std::cin >> opcionAvanzada)) {
+            std::cin.clear();
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            std::cout << "Opcion invalida.\n";
+            continue;
+        }
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
+        if (opcionAvanzada == 1) {
+            std::string codigo;
+            std::cout << "Codigo: ";
+            std::getline(std::cin, codigo);
+            cd.buscarEnBPlus(codigo);
+        } else if (opcionAvanzada == 2) {
+            std::string desde, hasta;
+            std::cout << "Desde: ";
+            std::getline(std::cin, desde);
+            std::cout << "Hasta: ";
+            std::getline(std::cin, hasta);
+            cd.buscarRangoBPlus(desde, hasta);
+        } else if (opcionAvanzada == 3) {
+            std::string codigo;
+            std::cout << "Codigo: ";
+            std::getline(std::cin, codigo);
+            cd.mostrarBitSetEnvio(codigo);
+        } else if (opcionAvanzada == 4) {
+            std::string codigoA, codigoB;
+            std::cout << "Primer codigo: ";
+            std::getline(std::cin, codigoA);
+            std::cout << "Segundo codigo: ";
+            std::getline(std::cin, codigoB);
+            cd.compararBitSets(codigoA, codigoB);
+        } else if (opcionAvanzada == 5) {
+            Set a = pedirConjunto(cd, "A");
+            Set b = pedirConjunto(cd, "B");
+            cd.mostrarOperacionesConjuntos(a, b);
+        } else if (opcionAvanzada == 6) {
+            Set conjunto = pedirConjunto(cd, "consulta");
+            cd.mostrarConjunto(conjunto, "Resultado");
+        } else if (opcionAvanzada != 0) {
+            std::cout << "Opcion invalida.\n";
+        }
+    } while (opcionAvanzada != 0);
 }
 
 void cargarDataset(CentroDeDistribucion& cd) {
@@ -36,7 +137,7 @@ int main() {
     std::cout << "Cargando dataset inicial...\n";
     cargarDataset(cd);
 
-    int opcion;
+    int opcion = 0;
     do {
         mostrarMenu();
         std::cin >> opcion;
@@ -121,13 +222,16 @@ int main() {
             cd.alturaBST();
 
         } else if (opcion == 11) {
+            menuConsultasAvanzadas(cd);
+
+        } else if (opcion == 12) {
             std::cout << "Finalizando... liberando memoria.\n";
 
         } else {
             std::cout << "Opcion invalida.\n";
         }
 
-    } while (opcion != 11);
+    } while (opcion != 12);
 
     return 0;
     // Al salir de main, ~CentroDeDistribucion() libera todo en cascada:
