@@ -1,11 +1,8 @@
 #include "ArbolBPlus.h"
-//#include "Envio.h"
 #include <iostream>
 
 // Constructor
-ArbolBPlus::ArbolBPlus() {
-    this->raiz = nullptr; // Inicializamos el puntero raiz en nulo
-}
+ArbolBPlus::ArbolBPlus() : raiz(nullptr), cantidad(0) {}
 
 // Funcion auxiliar para liberar la memoria de los nodos
 void ArbolBPlus::destruirRec(NodoBPlus* actual) {
@@ -16,19 +13,22 @@ void ArbolBPlus::destruirRec(NodoBPlus* actual) {
             destruirRec(actual->hijos[i]); //Llamamos recursivamente a la funcion para limpiar cada hijo
         }
     }
-
     delete actual;
 }
 
 //Destructor
 ArbolBPlus::~ArbolBPlus() {
-    destruirRec(this->raiz); // Iniciamos el borrado recursivo pasando el nodo raiz
+    destruirRec(raiz); // Iniciamos el borrado recursivo pasando el nodo raiz
     this->raiz = nullptr;   // Dejamos el puntero raiz limpio en nulo por seguridad
 }
 
 // Consulta si el arbol esta vacio
 bool ArbolBPlus::estaVacio() const {
-    return this->raiz == nullptr; // Devuelve true si la raiz apunta a nulo, o false si tiene al menos un nodo
+    return raiz == nullptr; // Devuelve true si la raiz apunta a nulo, o false si tiene al menos un nodo
+}
+
+int ArbolBPlus::getCantidad() const {
+    return cantidad; 
 }
 
 // Funcion auxiliar para calcular la altura
@@ -41,7 +41,7 @@ int ArbolBPlus::alturaRec(NodoBPlus* actual) const {
 
 // Devuelve la altura total del arbol
 int ArbolBPlus::altura() const {
-    return alturaRec(this->raiz); // Ejecuta el calculo de altura comenzando desde el nodo raiz
+    return alturaRec(raiz); // Ejecuta el calculo de altura comenzando desde el nodo raiz
 }
 
 // Función auxiliar recursiva para mostrar los datos de las hojas
@@ -66,27 +66,145 @@ void ArbolBPlus::inOrderRec(NodoBPlus* actual) const {
 
 // Imprime el contenido completo del arbol en pantalla
 void ArbolBPlus::recorridoInOrder() const {
-    if (this->raiz == nullptr) { // Verificamos si la raiz esta vacia
+    if (raiz == nullptr) { // Verificamos si la raiz esta vacia
         std::cout << "  (arbol B+ vacio)\n";
         return; 
     }
-    inOrderRec(this->raiz); // Si tiene elementos, llamamos a la funcion auxiliar desde la raiz
+    inOrderRec(raiz); // Si tiene elementos, llamamos a la funcion auxiliar desde la raiz
+}
+
+void ArbolBPlus::dividirHoja(NodoBPlus* hoja, std::string& claveSube, NodoBPlus*& nuevoDerecho) {
+    NodoBPlus* derecha = new NodoBPlus(true);
+    int mitad = hoja->cantidadClaves / 2;
+
+    for (int i = mitad; i < hoja->cantidadClaves; i++) {
+        derecha->claves[i - mitad] = hoja->claves[i];
+        derecha->envios[i - mitad] = hoja->envios[i];
+        hoja->claves[i] = "";
+        hoja->envios[i] = nullptr;
+    }
+    derecha->cantidadClaves = hoja->cantidadClaves - mitad;
+    hoja->cantidadClaves = mitad;
+
+    derecha->siguiente = hoja->siguiente;
+    hoja->siguiente = derecha;
+
+    claveSube = derecha->claves[0];
+    nuevoDerecho = derecha;
+}
+
+void ArbolBPlus::dividirNodoInterno(NodoBPlus* nodo, std::string& claveSube, NodoBPlus*& nuevoDerecho) {
+    NodoBPlus* derecha = new NodoBPlus(false);
+    int medio = nodo->cantidadClaves / 2;
+
+    claveSube = nodo->claves[medio];
+
+    int j = 0;
+    for (int i = medio + 1; i < nodo->cantidadClaves; i++) {
+        derecha->claves[j] = nodo->claves[i];
+        derecha->hijos[j] = nodo->hijos[i];
+        j++;
+    }
+    derecha->hijos[j] = nodo->hijos[nodo->cantidadClaves];
+    derecha->cantidadClaves = j;
+
+    for (int i = medio; i < nodo->cantidadClaves; i++) {
+        nodo->claves[i] = "";
+        nodo->hijos[i + 1] = nullptr;
+    }
+    nodo->cantidadClaves = medio;
+
+    nuevoDerecho = derecha;
+}
+
+bool ArbolBPlus::insertarRec(NodoBPlus* nodo, Envio* envio, std::string& claveSube, NodoBPlus*& nuevoDerecho) {
+    const std::string& codigo = envio->getCodigo();
+    nuevoDerecho = nullptr;
+
+    if (nodo->esHoja) {
+        int i = 0;
+        while (i < nodo->cantidadClaves && nodo->claves[i] < codigo) i++;
+
+        if (i < nodo->cantidadClaves && nodo->claves[i] == codigo) return false;
+
+        for (int j = nodo->cantidadClaves; j > i; j--) {
+            nodo->claves[j] = nodo->claves[j - 1];
+            nodo->envios[j] = nodo->envios[j - 1];
+        }
+        nodo->claves[i] = codigo;
+        nodo->envios[i] = envio;
+        nodo->cantidadClaves++;
+
+        if (nodo->cantidadClaves > MAX_CLAVES) dividirHoja(nodo, claveSube, nuevoDerecho);
+        return true;
+    }
+
+    int i = 0;
+    while (i < nodo->cantidadClaves && codigo >= nodo->claves[i]) i++;
+
+    std::string claveHijo;
+    NodoBPlus* derechoHijo = nullptr;
+    if (!insertarRec(nodo->hijos[i], envio, claveHijo, derechoHijo)) return false;
+
+    if (derechoHijo != nullptr) {
+        for (int j = nodo->cantidadClaves; j > i; j--) {
+            nodo->claves[j] = nodo->claves[j - 1];
+            nodo->hijos[j + 1] = nodo->hijos[j];
+        }
+        nodo->claves[i] = claveHijo;
+        nodo->hijos[i + 1] = derechoHijo;
+        nodo->cantidadClaves++;
+
+        if (nodo->cantidadClaves > MAX_CLAVES) dividirNodoInterno(nodo, claveSube, nuevoDerecho);
+    }
+    return true;
+}
+
+bool ArbolBPlus::insertar(Envio* envio){ //función para insertar datos en el arbol
+    if (envio == nullptr){ //caso base: envio inexistente
+        return false;
+    }
+    if (raiz == nullptr){ //caso base 2: cuando la raiz apunta al nulo desde un comienzo, es decir, cuando no hay mas nodos
+        raiz = new NodoBPlus(true); //creamos una hoja inicial
+        raiz->claves[0] = envio->getCodigo(); //guarda la clave del envio del usuario
+        raiz->envios[0] = envio;
+        raiz->cantidadClaves = 1; //aumentamos la cantidad de claves que hay en el arbol
+        cantidad++;
+        return true; //hacemos el return luego de la inserción
+    }
+    std::string claveSube;
+    NodoBPlus* nuevoDerecho = nullptr;
+    if (!insertarRec(raiz, envio, claveSube, nuevoDerecho)) return false; // el codigo ya existia
+
+    if (nuevoDerecho != nullptr) {
+        NodoBPlus* nuevaRaiz = new NodoBPlus(false);
+        nuevaRaiz->claves[0] = claveSube;
+        nuevaRaiz->hijos[0] = raiz;
+        nuevaRaiz->hijos[1] = nuevoDerecho;
+        nuevaRaiz->cantidadClaves = 1;
+        raiz = nuevaRaiz;
+    }
+    cantidad++;
+    return true;
 }
 
 // Busca un envio por su codigo buscando de la raiz a las hojas
-Envio* ArbolBPlus::buscar(const std::string& codigo) const {
-    if (this->raiz == nullptr) 
+Envio* ArbolBPlus::buscar(const std::string& codigo, int& visitados) const {
+    visitados = 0;
+    if (raiz == nullptr) 
     {
         return nullptr; // Si el arbol esta vacio se detiene porque no hay nada que buscar
     }
-    NodoBPlus* cursor = this->raiz; // Creamos un puntero temporal para movernos sin perder la raiz
+    NodoBPlus* cursor = raiz; // Creamos un puntero temporal para movernos sin perder la raiz
+    visitados++;
 
     while (!cursor->esHoja) { // Mientras no hayamos llegado a una hoja
         int i = 0; // Inicializamos un indice de busqueda en 0
         while (i < cursor->cantidadClaves && codigo >= cursor->claves[i]) { // Avanzamos mientras la clave buscada sea mayor o igual a la clave del nodo
             i++; // Incrementamos la posicion
         }
-        cursor = cursor->hijos[i];
+        cursor = cursor->hijos[i]; 
+        visitados++;
     }
 
     for (int i = 0; i < cursor->cantidadClaves; i++) { // Una vez parados en la hoja, recorremos sus claves
@@ -94,17 +212,27 @@ Envio* ArbolBPlus::buscar(const std::string& codigo) const {
             return cursor->envios[i]; // Retornamos la direccion del objeto Envio asociado
         }
     }
-
     return nullptr; // Si termino de revisar la hoja y no estaba el codigo, retornamos nulo (para asegurarnos que cubra algun error)
 }
 
+Envio* ArbolBPlus::buscar(const std::string& codigo) const {
+    int visitados;
+    return buscar(codigo, visitados);
+}
+
 // Realiza una busqueda por rango dentro del intervalo [desde, hasta]
-void ArbolBPlus::buscarPorRango(const std::string& desde, const std::string& hasta) const {
-    if (this->raiz == nullptr) 
-    {
-        return; // Si el arbol esta vacio salimos
+int ArbolBPlus::buscarPorRango(const std::string& desde, const std::string& hasta) const {
+    if (raiz == nullptr) {
+        std::cout << "  (arbol B+ vacio)\n";
+        return 0;
     }
-    NodoBPlus* cursor = this->raiz; // Creamos el puntero auxiliar
+    
+    if (desde > hasta) {
+        std::cout << "  Rango invalido: 'desde' es mayor que 'hasta'.\n";
+        return 0;
+    }
+    
+    NodoBPlus* cursor = raiz; // Creamos el puntero auxiliar
 
     while (!cursor->esHoja) { // Descendemos por las claves internas para ubicar la hoja inicial
         int i = 0; // Arrancamos la comparacion en la primera clave
@@ -114,82 +242,81 @@ void ArbolBPlus::buscarPorRango(const std::string& desde, const std::string& has
         cursor = cursor->hijos[i]; // Bajamos al hijo correspondiente
     }
 
-    std::cout << "Resultados en rango [" << desde << " - " << hasta << "]\n"; 
-
-    while (cursor != nullptr) { // Recorremos las hojas secuencialmente gracias a la lista enlazada
-        for (int i = 0; i < cursor->cantidadClaves; i++) { // Revisamos todas las claves guardadas en la hoja actual
-            if (cursor->claves[i] >= desde && cursor->claves[i] <= hasta) { // Verificamos si la clave entra en el rango
-                if (cursor->envios[i] != nullptr) { // Confirmamos que el puntero al envio sea valido
-                    cursor->envios[i]->mostrar(); // Mostramos en pantalla los datos del paquete
-                }
+    std::cout << "Resultados en rango [" << desde << " - " << hasta << "]\n";
+   
+    int encontrados = 0;
+    while (cursor != nullptr) {
+        for (int i = 0; i < cursor->cantidadClaves; i++) {
+            if (cursor->claves[i] > hasta) {
+                if (encontrados == 0) std::cout << "  (sin resultados)\n";
+                return encontrados;
             }
-            if (cursor->claves[i] > hasta) { // Si la clave de la hoja supera el limite maximo 'hasta'
-                return; 
+            if (cursor->claves[i] >= desde) {
+                std::cout << "  ";
+                cursor->envios[i]->mostrar();
+                encontrados++;
             }
         }
-        cursor = cursor->siguiente; // Nos movemos a la hoja siguiente
+        cursor = cursor->siguiente; // Nos movemos a la hoja siguiente    
+    }
+    
+    if (encontrados == 0) {
+        std::cout << "  (sin resultados)\n";
+    }
+    return encontrados;
+}
+
+// Verifica el nivel de las hojas, Parejo pasa a false si difieren
+int ArbolBPlus::profundidadHojas(NodoBPlus* actual, int nivel, bool& parejo, int& nivelHojas) const {
+    if (actual == nullptr) return 0;
+ 
+    if (actual->esHoja) {
+        if (nivelHojas == -1) nivelHojas = nivel;
+        else if (nivelHojas != nivel) parejo = false;
+        return 1;
+    }
+ 
+    int hojas = 0;
+    for (int i = 0; i <= actual->cantidadClaves; i++) {
+        hojas += profundidadHojas(actual->hijos[i], nivel + 1, parejo, nivelHojas);
+    }
+    return hojas;
+}
+
+bool ArbolBPlus::hojasAlMismoNivel() const {
+    bool parejo = true;
+    int nivelHojas = -1;
+    profundidadHojas(raiz, 1, parejo, nivelHojas);
+    return parejo;
+}
+
+// imprimir jerarquicamente la estructura interna del B+
+void ArbolBPlus::mostrarEstructuraRec(NodoBPlus* actual, int nivel) const {
+    if (actual == nullptr) return;
+ 
+    for (int i = 0; i < nivel; i++) std::cout << "    ";
+    if (actual->esHoja) {
+        std::cout << "Hoja (";
+        for (int i = 0; i < actual->cantidadClaves; i++) {
+            std::cout << actual->claves[i] << (i + 1 < actual->cantidadClaves ? ", " : "");
+        }
+        std::cout << ")\n";
+    } else {
+        std::cout << "Interno [";
+        for (int i = 0; i < actual->cantidadClaves; i++) {
+            std::cout << actual->claves[i] << (i + 1 < actual->cantidadClaves ? " | " : "");
+        }
+        std::cout << "]\n";
+        for (int i = 0; i <= actual->cantidadClaves; i++) {
+            mostrarEstructuraRec(actual->hijos[i], nivel + 1);
+        }
     }
 }
-void ArbolBPlus::insertar(Envio* envio){ //función para insertar datos en el arbol
-    if (envio == nullptr){ //caso base: envio inexistente
+
+void ArbolBPlus::mostrarEstructura() const {
+    if (raiz == nullptr) {
+        std::cout << "  (arbol B+ vacio)\n";
         return;
     }
-    if (raiz == nullptr){ //caso base 2: cuando la raiz apunta al nulo desde un comienzo, es decir, cuando no hay mas nodos
-        raiz = new NodoBPlus(true); //creamos una hoja inicial
-        raiz -> claves[0] = envio -> getCodigo(); //guarda la clave del envio del usuario
-        raiz->envios[0] = envio;
-        raiz->cantidadClaves = 1; //aumentamos la cantidad de claves que hay en el arbol
-        return; //hacemos el return luego de la inserción
-    }
-    insertarAux(raiz, envio); //hacemos un caso recursivo con otra función
-}
-void ArbolBPlus::insertarAux(NodoBPlus* nodo, Envio* envio){ // se utiliza para el caso recursivo
-    int i = 0;
-
-    // 1. CASO BASE: Si llegamos a una hoja
-    if (nodo->esHoja){ 
-        // Buscamos la posición 'i' donde debe ir la nueva clave
-        while (i < nodo->cantidadClaves && envio->getCodigo() > nodo->claves[i]){
-            i++;
-        }
-        // Desplazamos elementos a la derecha para abrir espacio
-        for (int j = nodo->cantidadClaves; j > i; j--){
-            nodo->claves[j] = nodo->claves[j - 1];
-            nodo->envios[j] = nodo->envios[j - 1];
-        }
-        // Guardamos el envío y aumentamos el contador
-        nodo->claves[i] = envio->getCodigo();
-        nodo->envios[i] = envio;
-        nodo->cantidadClaves++;
-        
-        return; // Salimos de la recursión
-    }
-    // 2. CASO RECURSIVO: Si el nodo es interno
-    while (i < nodo->cantidadClaves){
-        if (nodo->claves[i] < envio->getCodigo()){
-            i++;
-        } else {
-            break;
-        } 
-    }
-    // Llamada recursiva para bajar al hijo correspondiente
-    insertarAux(nodo->hijos[i], envio);
-}
-Envio* ArbolBPlus::buscar(std::string codigo) {
-    if (raiz == nullptr) return nullptr;
-    return buscarAux(raiz, codigo);
-}
-
-Envio* ArbolBPlus::buscarAux(NodoBPlus* nodo, std::string codigo) {
-    int i = 0;
-    while (i < nodo->cantidadClaves && codigo > nodo->claves[i]) i++;
-
-    if (nodo->esHoja) {
-        if (i < nodo->cantidadClaves && nodo->claves[i] == codigo) {
-            return nodo->envios[i];
-        }
-        return nullptr;
-    }
-
-    return buscarAux(nodo->hijos[i], codigo);
+    mostrarEstructuraRec(raiz, 0);
 }
